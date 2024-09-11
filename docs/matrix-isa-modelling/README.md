@@ -1,4 +1,3 @@
-# matrix-ISA-modelling
 
 ## Introduction
 
@@ -31,7 +30,7 @@ The architecture provides loading tiles of A, B and C, and performing outer-prod
 
 Linear algebra libraries decompose large GEMMs into micro-kernels, such as the output stationary outer product kernel below:
 
-![image](figures/Left-The-GotoBLAS-algorithm-for-matrix-matrix-multiplication-as-refactored-in-BLIS.png)
+![image](figures/GotoBLAS-BLIS.jpg)
 
 Decomposition of GEMM into Outer Product Micro-Kernels [1]. 
 where the register and cache tile dimensions $n_r$, $m_r$, $k_c$ correspond to our model parameters like so: $n_r=v_l$, $m_r = m_l$
@@ -79,14 +78,9 @@ First, consider GEMM with small matrix dimensions, where A, B, and C all fit in 
 
 To hide memory latency $t_{ld}$, $p_{mem}$ threads must send memory load requests in parallel, requiring $p_{mem}$ matrix tile registers to receive the load data. A cache can be used to buffer data loaded for the next batch of GEMMs and data to be stored from the last batch of GEMMs.
 
-![image](figures/smallGEMM.png)
+![image](figures/mem-block-dg.png)
 
 If the C matrix is small enough to fit in an matrix register, then the parallel memory requests must come from independent threads, and the only opportunity for memory data reuse is in the K-dimension, because tile C will be reused K times. 
-
-TODO: cache prefetch sequence
-ci-1 (ai,bi)xkc ci+1
-vs
-ci-1 (ai,bi)xkc , (ai+1,bi+1)xkc 
 
 ### Operation Latency
 
@@ -193,16 +187,3 @@ For example usage, see dataflow_model.ipynb
 
 ## Reference
 [1] F. G. Van Zee and T. M. Smith, “Implementing high-performance complex matrix multiplication,” ACM Transactions on Mathematical Software, 2016
-
-## Todo
-Pipeline timing diagram ,  
-
-lifetime of tile inregister
-
-tradeoff
-mem, cache, mrf capacity
-mem, mrf bw 
-ops/s
-as function of inputs
-MNK
-datatype
