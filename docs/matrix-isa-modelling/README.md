@@ -3,7 +3,7 @@
 
 Performance model of matrix multiplication architecture. For now, the functional unit computes the outer product GEMM kernel
 
-$ C_{M,N} = A_{M,K} * B_{K,N} = \sum_i A_{M,i} \times B_{i,N}  $.
+$C_{M,N} = A_{M,K} * B_{K,N} = \sum_i A_{M,i} \times B_{i,N}$.
 
 We would like to characterize how architectural parameters such as number and size of matrix registers, supported datatype, scalability of register dimensions, instructions, etc, affect performance metrics such as kernel latency, throughput (operations per cycle), and required bandwidth of memory and matrix register file, and cache size to maximize throughput.
 
@@ -13,14 +13,14 @@ In the future we plan to use RTL simulation to see how these performance metrics
 
 ## Functional Unit Layout
 
-A a two dimensional grid of registers and multiply-accumulate (macc) units, stores partial products of a subset, or tile, of the output matrix, $C_i = A_{M,i} \times B_{i,N} $. A mesh of wires connects the macc units to columns of A and rows of B. This outer-product-centric approach to accelerating GEMM kernels encourages C to be held in accumulation registers distributed with the MACC units.
+A a two dimensional grid of registers and multiply-accumulate (macc) units, stores partial products of a subset, or tile, of the output matrix, $C_i = A_{M,i} \times B_{i,N}$. A mesh of wires connects the macc units to columns of A and rows of B. This outer-product-centric approach to accelerating GEMM kernels encourages C to be held in accumulation registers distributed with the MACC units.
 
 ![image](figures/mmu_layout.png)
 
 Fig 1. Physical Layout of Outer Product
 
 
-The outer product unit (OPU) can execute $ NM $ MACC operations per cycle, and requires $N+M$ elements loaded from memory. For a machine with vector length $vl=N=M$, the OPU performance scales as $NM=vl^2$ MACCs per cycle, so performance scales quadratically with the vector length.
+The outer product unit (OPU) can execute $NM$ MACC operations per cycle, and requires $N+M$ elements loaded from memory. For a machine with vector length $vl=N=M$, the OPU performance scales as $NM=vl^2$ MACCs per cycle, so performance scales quadratically with the vector length.
 
 The architecture provides loading tiles of A, B and C, and performing outer-product-accumulate on C.
 
@@ -136,19 +136,19 @@ $p_{mem}(2C_t+A_t+B_t) = p_{mem}(2m_lv_l+m_lk_c+k_cv_l)$ elements,
 where $v_l$, $m_l$, $k_c$, are the dimensions of tiles $C_t$, $A_t$, $B_t$.
 In general, operational intensity is maximized when matrix tiles are square. If $v_l=m_l$, required cache capacity can be expressed as
 
-$c_\$ = p_{mem}(2m_l+2k_c)$ vectors of length $v_l$.
+$c_{L2} = p_{mem}(2m_l+2k_c)$ vectors of length $v_l$.
 
 ## Memory Bandwidth
 
 Over one batch of $p_{mem}$ GEMMs,required memory bandwidth, is 
 
-$ BW_{mem} =  \frac{c_\$}{t_{\mu k}} = \frac{m_l+k_c}{k_c} $ vector loads per cycle,
+$BW_{mem} =  \frac{c_{L2}}{t_{\mu k}} = \frac{m_l+k_c}{k_c}$ vector loads per cycle,
 
 ### Bandwidth for Large K Dimension
 
 Now we see that is K is large, we acheive low bandwidth in addition to high operational intensity:
 
-$ BW_{mem} \approx 1$ vector load per cycle.
+$BW_{mem} \approx 1$ vector load per cycle.
 
 In this ideal case, the cache simply needs to buffer the next A and B tiles that will be used to accumulate C, and the overhead of loading and storing C tiles is negligible.
 
@@ -156,11 +156,11 @@ In this ideal case, the cache simply needs to buffer the next A and B tiles that
 
 In general N and M are similar in size to K. If the dimensions N and M of matrices A B and C are sufficiently large, one tile of B can be reused for multiple C and A tiles, as shown in the first loop around the micro-kernel. This reduces the required cache capacity to
 
-$c_\$ = k_c(p_{mem}+1)$ vectors
+$c_{L2} = k_c(p_{mem}+1)$ vectors
 
 and memory bandwidth to
 
-$ BW_{mem} = \frac{k_c(p_{mem}+1)}{k_cp_{mem}} = 1 + \frac{1}{p_{mem}}$ vectors per cycle.
+$BW_{mem} = \frac{k_c(p_{mem}+1)}{k_cp_{mem}} = 1 + \frac{1}{p_{mem}}$ vectors per cycle.
 
 ### Bandwidth for Small K
 
@@ -168,7 +168,7 @@ GEMM with small K is more challenging because loading and storing C tiles begins
 
 To support applications with small K, the cache can buffer tiles $C_{i-1}$ and $C_{i+1}$ and move them in and out of matrix registers. The required cache capacity becomes
 
-$c_\$ = 2p_{mem}(k_c + m_l)$ vectors 
+$c_{L2} = 2p_{mem}(k_c + m_l)$ vectors 
 
 and latency of the micro-kernel becomes
 
@@ -176,7 +176,7 @@ $t_{\mu k}=p_{mem}\max(k_c,m_l)$
 
 Thus required memory bandwidth is
 
-$ BW_{mem} = \frac{2(k_c + m_l)}{\max(m_l, k_c)} $ vector loads per cycle,
+$BW_{mem} = \frac{2(k_c + m_l)}{\max(m_l, k_c)}$ vector loads per cycle,
 
 
 ## Usage
