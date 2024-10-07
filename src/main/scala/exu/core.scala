@@ -26,7 +26,7 @@
 //   wb  - Writeback
 //   com - Commit
 
-package boom.exu
+package ocelot.exu
 
 import java.nio.file.{Paths}
 
@@ -40,10 +40,10 @@ import freechips.rocketchip.rocket.{Causes, PRV, TracedInstruction}
 import freechips.rocketchip.util.{Str, UIntIsOneOf, CoreMonitorBundle}
 import freechips.rocketchip.devices.tilelink.{PLICConsts, CLINTConsts}
 
-import boom.common._
-import boom.ifu.{GlobalHistory, HasBoomFrontendParameters}
-import boom.exu.FUConstants._
-import boom.util._
+import ocelot.common._
+import ocelot.ifu.{GlobalHistory, HasBoomFrontendParameters}
+import ocelot.exu.FUConstants._
+import ocelot.util._
 
 /**
  * Top level core object that connects the Frontend to the rest of the pipeline.
@@ -54,11 +54,11 @@ class BoomCore()(implicit p: Parameters) extends BoomModule
   val io = new freechips.rocketchip.tile.CoreBundle
   {
     val hartid = Input(UInt(hartIdLen.W))
-    val interrupts = Input(new freechips.rocketchip.tile.CoreInterrupts())
-    val ifu = new boom.ifu.BoomFrontendIO
+    val interrupts = Input(new freechips.rocketchip.rocket.CoreInterrupts(false))
+    val ifu = new ocelot.ifu.BoomFrontendIO
     val ptw = Flipped(new freechips.rocketchip.rocket.DatapathPTWIO())
     val rocc = Flipped(new freechips.rocketchip.tile.RoCCCoreIO())
-    val lsu = Flipped(new boom.lsu.LSUCoreIO)
+    val lsu = Flipped(new ocelot.lsu.LSUCoreIO)
     val ptw_tlb = new freechips.rocketchip.rocket.TLBPTWIO()
     val trace = Output(Vec(coreParams.retireWidth, new TracedInstruction))
     val fcsr_rm = UInt(freechips.rocketchip.tile.FPConstants.RM_SZ.W)
@@ -67,7 +67,7 @@ class BoomCore()(implicit p: Parameters) extends BoomModule
   // construct all of the modules
 
   // Only holds integer-registerfile execution units.
-  val exe_units = new boom.exu.ExecutionUnits(fpu=false, vec=usingVector)
+  val exe_units = new ocelot.exu.ExecutionUnits(fpu=false, vec=usingVector)
   val jmp_unit_idx = exe_units.jmp_unit_idx
   val jmp_unit = exe_units(jmp_unit_idx)
 
@@ -1059,7 +1059,7 @@ class BoomCore()(implicit p: Parameters) extends BoomModule
   csr.io.exception := RegNext(rob.io.com_xcpt.valid)
   // csr.io.pc used for setting EPC during exception or CSR.io.trace.
 
-  csr.io.pc        := (boom.util.AlignPCToBoundary(io.ifu.get_pc(0).com_pc, icBlockBytes)
+  csr.io.pc        := (ocelot.util.AlignPCToBoundary(io.ifu.get_pc(0).com_pc, icBlockBytes)
                      + RegNext(rob.io.com_xcpt.bits.pc_lob)
                      - Mux(RegNext(rob.io.com_xcpt.bits.edge_inst), 2.U, 0.U))
   // Cause not valid for for CALL or BREAKPOINTs (CSRFile will override it).

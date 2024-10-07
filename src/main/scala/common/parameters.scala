@@ -3,7 +3,7 @@
 // All Rights Reserved. See LICENSE and LICENSE.SiFive for license details.
 //------------------------------------------------------------------------------
 
-package boom.common
+package ocelot.common
 
 import chisel3._
 import chisel3.util._
@@ -15,9 +15,9 @@ import freechips.rocketchip.subsystem.{MemoryPortParams}
 import org.chipsalliance.cde.config.{Parameters, Field}
 import freechips.rocketchip.devices.tilelink.{BootROMParams, CLINTParams, PLICParams}
 
-import boom.ifu._
-import boom.exu._
-import boom.lsu._
+import ocelot.ifu._
+import ocelot.exu._
+import ocelot.lsu._
 
 /**
  * Default BOOM core parameters

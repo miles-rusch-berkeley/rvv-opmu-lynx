@@ -10,7 +10,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-package boom.exu
+package ocelot.exu
 
 import chisel3._
 import chisel3.util._
@@ -19,8 +19,8 @@ import org.chipsalliance.cde.config.Parameters
 import freechips.rocketchip.tile.{RoCCCoreIO, RoCCInstruction}
 import freechips.rocketchip.rocket._
 
-import boom.common._
-import boom.util._
+import ocelot.common._
+import ocelot.util._
 
 /**
   * IO Bundle representing RoCC shim interface with the core

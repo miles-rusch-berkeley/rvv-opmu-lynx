@@ -6,7 +6,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-package boom.exu
+package ocelot.exu
 
 import chisel3._
 import chisel3.util.{log2Ceil, PopCount}
@@ -15,7 +15,7 @@ import org.chipsalliance.cde.config.Parameters
 import freechips.rocketchip.util.Str
 
 import FUConstants._
-import boom.common._
+import ocelot.common._
 
 /**
  * Specific type of issue unit

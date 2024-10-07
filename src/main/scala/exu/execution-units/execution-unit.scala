@@ -13,7 +13,7 @@
 // A given execution pipeline may contain multiple functional units; one or more
 // read ports, and one or more writeports.
 
-package boom.exu
+package ocelot.exu
 
 import scala.collection.mutable.{ArrayBuffer}
 
@@ -22,13 +22,13 @@ import chisel3.util._
 
 import org.chipsalliance.cde.config.{Parameters}
 import freechips.rocketchip.rocket.{BP,VType,VConfig}
-import freechips.rocketchip.tile.{XLen, RoCCCoreIO}
+import freechips.rocketchip.tile.{xLen, RoCCCoreIO}
 import freechips.rocketchip.tile
 
 import FUConstants._
-import boom.common._
-import boom.ifu.{GetPCFromFtqIO}
-import boom.util.{ImmGen, IsKilledByBranch, BranchKillableQueue, BoomCoreStringPrefix}
+import ocelot.common._
+import ocelot.ifu.{GetPCFromFtqIO}
+import ocelot.util.{ImmGen, IsKilledByBranch, BranchKillableQueue, BoomCoreStringPrefix}
 
 /**
  * Response from Execution Unit. Bundles a MicroOp with data
@@ -131,7 +131,7 @@ abstract class ExecutionUnit(
     val fcsr_rm = if (hasFcsr) Input(Bits(tile.FPConstants.RM_SZ.W)) else null
 
     // only used by the mem unit
-    val lsu_io = if (hasMem) Flipped(new boom.lsu.LSUExeIO) else null
+    val lsu_io = if (hasMem) Flipped(new ocelot.lsu.LSUExeIO) else null
     val bp = if (hasMem) Input(Vec(nBreakpoints, new BP)) else null
     val mcontext = if (hasMem) Input(UInt(coreParams.mcontextWidth.W)) else null
     val scontext = if (hasMem) Input(UInt(coreParams.scontextWidth.W)) else null
@@ -218,7 +218,7 @@ class ALUExeUnit(
     numBypassStages  =
       if (hasAlu && hasMul) 3 //TODO XXX p(tile.TileKey).core.imulLatency
       else if (hasAlu) 1 else 0,
-    dataWidth        = p(tile.XLen) + 1,
+    dataWidth        = p(tile.xLen) + 1,
     bypassable       = hasAlu,
     alwaysBypassable = hasAlu && !(hasMem || hasJmpUnit || hasMul || hasDiv || hasCSR || hasIfpu || hasRocc),
     hasCSR           = hasCSR,

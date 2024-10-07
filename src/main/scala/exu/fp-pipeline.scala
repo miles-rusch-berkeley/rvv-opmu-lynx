@@ -9,7 +9,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-package boom.exu
+package ocelot.exu
 
 import chisel3._
 import chisel3.util._
@@ -18,10 +18,10 @@ import org.chipsalliance.cde.config.{Parameters}
 import freechips.rocketchip.rocket
 import freechips.rocketchip.tile
 
-import boom.exu.FUConstants._
-import boom.common._
-import boom.exu._
-import boom.util.{BoomCoreStringPrefix}
+import ocelot.exu.FUConstants._
+import ocelot.common._
+import ocelot.exu._
+import ocelot.util.{BoomCoreStringPrefix}
 
 /**
  * Top level datapath that wraps the floating point issue window, regfile, and arithmetic units.
@@ -63,7 +63,7 @@ class FpPipeline(implicit p: Parameters) extends BoomModule with tile.HasFPUPara
   //**********************************
   // construct all of the modules
 
-  val exe_units      = new boom.exu.ExecutionUnits(fpu=true, vec=false)
+  val exe_units      = new ocelot.exu.ExecutionUnits(fpu=true, vec=false)
   val issue_unit     = Module(new IssueUnitCollapsing(
                          issueParams.find(_.iqType == IQT_FP.litValue).get,
                          numWakeupPorts))

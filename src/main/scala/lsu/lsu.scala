@@ -43,7 +43,7 @@
 
 
 
-package boom.lsu
+package ocelot.lsu
 
 import chisel3._
 import chisel3.util._
@@ -57,17 +57,17 @@ import freechips.rocketchip.util.Str
 import freechips.rocketchip.util._
 
 
-import boom.common._
-import boom.exu.{BrUpdateInfo, Exception, FuncUnitResp, CommitSignals, ExeUnitResp}
-import boom.util.{BoolToChar, AgePriorityEncoder, IsKilledByBranch, GetNewBrMask, WrapInc, IsOlder, UpdateBrMask}
+import ocelot.common._
+import ocelot.exu.{BrUpdateInfo, Exception, FuncUnitResp, CommitSignals, ExeUnitResp}
+import ocelot.util.{BoolToChar, AgePriorityEncoder, IsKilledByBranch, GetNewBrMask, WrapInc, IsOlder, UpdateBrMask}
 
 class LSUExeIO(implicit p: Parameters) extends BoomBundle()(p)
 {
   // The "resp" of the maddrcalc is really a "req" to the LSU
   val req       = Flipped(new ValidIO(new FuncUnitResp(xLen)))
   // Send load data to regfiles
-  val iresp    = new DecoupledIO(new boom.exu.ExeUnitResp(xLen))
-  val fresp    = new DecoupledIO(new boom.exu.ExeUnitResp(xLen+1)) // TODO: Should this be fLen?
+  val iresp    = new DecoupledIO(new ocelot.exu.ExeUnitResp(xLen))
+  val fresp    = new DecoupledIO(new ocelot.exu.ExeUnitResp(xLen+1)) // TODO: Should this be fLen?
 }
 
 class VGenResp(val dataWidth: Int)(implicit p: Parameters) extends BoomBundle

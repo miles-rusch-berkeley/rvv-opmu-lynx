@@ -9,7 +9,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-package boom.exu
+package ocelot.exu
 
 import scala.collection.mutable.{ArrayBuffer}
 
@@ -17,8 +17,8 @@ import chisel3._
 
 import org.chipsalliance.cde.config.{Parameters}
 
-import boom.common._
-import boom.util.{BoomCoreStringPrefix}
+import ocelot.common._
+import ocelot.util.{BoomCoreStringPrefix}
 
 /**
  * Top level class to wrap all execution units together into a "collection"

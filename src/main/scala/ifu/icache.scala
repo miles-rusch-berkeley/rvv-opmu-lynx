@@ -9,12 +9,11 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-package boom.ifu
+package ocelot.ifu
 
 import chisel3._
 import chisel3.util._
 import chisel3.util.random._
-import chisel3.internal.sourceinfo.{SourceInfo}
 
 import org.chipsalliance.cde.config.{Parameters}
 import freechips.rocketchip.diplomacy._
@@ -27,8 +26,8 @@ import freechips.rocketchip.rocket.{HasL1ICacheParameters, ICacheParams, ICacheE
 
 
 
-import boom.common._
-import boom.util.{BoomCoreStringPrefix}
+import ocelot.common._
+import ocelot.util.{BoomCoreStringPrefix}
 
 /**
  * ICache module
@@ -92,7 +91,7 @@ class ICacheBundle(val outer: ICache) extends BoomBundle()(outer.p)
 object GetPropertyByHartId
 {
   def apply[T <: Data](tiles: Seq[RocketTileParams], f: RocketTileParams => Option[T], hartId: UInt): T = {
-    PriorityMux(tiles.collect { case t if f(t).isDefined => (t.hartId.U === hartId) -> f(t).get })
+    PriorityMux(tiles.collect { case t if f(t).isDefined => (t.tileId.U === hartId) -> f(t).get })
   }
 }
 

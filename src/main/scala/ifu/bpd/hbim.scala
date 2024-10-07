@@ -1,4 +1,4 @@
-package boom.ifu
+package ocelot.ifu
 
 import chisel3._
 import chisel3.util._
@@ -7,8 +7,8 @@ import org.chipsalliance.cde.config.{Field, Parameters}
 import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.tilelink._
 
-import boom.common._
-import boom.util.{BoomCoreStringPrefix, WrapInc}
+import ocelot.common._
+import ocelot.util.{BoomCoreStringPrefix, WrapInc}
 import scala.math.min
 
 

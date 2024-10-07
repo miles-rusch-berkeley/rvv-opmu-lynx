@@ -3,7 +3,7 @@
 // All Rights Reserved. See LICENSE and LICENSE.SiFive for license details.
 //------------------------------------------------------------------------------
 
-package boom.exu
+package ocelot.exu
 
 import chisel3._
 import chisel3.util._
@@ -17,8 +17,8 @@ import freechips.rocketchip.rocket.{CSR,Causes}
 import freechips.rocketchip.util.{uintToBitPat,UIntIsOneOf}
 
 import FUConstants._
-import boom.common._
-import boom.util._
+import ocelot.common._
+import ocelot.util._
 
 // scalastyle:off
 /**

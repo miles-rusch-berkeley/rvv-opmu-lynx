@@ -9,7 +9,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-package boom.exu
+package ocelot.exu
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -18,8 +18,8 @@ import chisel3.util._
 
 import org.chipsalliance.cde.config.Parameters
 
-import boom.common._
-import boom.util.{BoomCoreStringPrefix}
+import ocelot.common._
+import ocelot.util.{BoomCoreStringPrefix}
 
 /**
  * IO bundle for a register read port

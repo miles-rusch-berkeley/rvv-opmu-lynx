@@ -14,7 +14,7 @@
 // TODO:
 // * reduce port counts.
 
-package boom.ifu
+package ocelot.ifu
 
 import chisel3._
 import chisel3.util._
@@ -22,9 +22,9 @@ import chisel3.util._
 import org.chipsalliance.cde.config.{Parameters}
 import freechips.rocketchip.util.{Str}
 
-import boom.common._
-import boom.exu._
-import boom.util._
+import ocelot.common._
+import ocelot.exu._
+import ocelot.util._
 
 /**
  * FTQ Parameters used in configurations

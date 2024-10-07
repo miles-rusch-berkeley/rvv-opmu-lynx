@@ -4,7 +4,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-package boom.lsu
+package ocelot.lsu
 
 import chisel3._
 import chisel3.util._
@@ -16,9 +16,9 @@ import freechips.rocketchip.tile._
 import freechips.rocketchip.util._
 import freechips.rocketchip.rocket._
 
-import boom.common._
-import boom.exu.BrUpdateInfo
-import boom.util.{IsKilledByBranch, GetNewBrMask, BranchKillableQueue, IsOlder, UpdateBrMask, AgePriorityEncoder, WrapInc, Transpose}
+import ocelot.common._
+import ocelot.exu.BrUpdateInfo
+import ocelot.util.{IsKilledByBranch, GetNewBrMask, BranchKillableQueue, IsOlder, UpdateBrMask, AgePriorityEncoder, WrapInc, Transpose}
 
 
 class BoomWritebackUnit(implicit edge: TLEdgeOut, p: Parameters) extends L1HellaCacheModule()(p) {

@@ -9,11 +9,10 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-package boom.ifu
+package ocelot.ifu
 
 import chisel3._
 import chisel3.util._
-import chisel3.internal.sourceinfo.{SourceInfo}
 
 import org.chipsalliance.cde.config._
 import freechips.rocketchip.subsystem._
@@ -24,9 +23,9 @@ import freechips.rocketchip.tile._
 import freechips.rocketchip.util._
 import freechips.rocketchip.util.property._
 
-import boom.common._
-import boom.exu.{CommitExceptionSignals, BranchDecode, BrUpdateInfo, BranchDecodeSignals}
-import boom.util._
+import ocelot.common._
+import ocelot.exu.{CommitExceptionSignals, BranchDecode, BrUpdateInfo, BranchDecodeSignals}
+import ocelot.util._
 
 
 class FrontendResp(implicit p: Parameters) extends BoomBundle()(p) {
@@ -297,7 +296,7 @@ class BoomFrontendIO(implicit p: Parameters) extends BoomBundle
 class BoomFrontend(val icacheParams: ICacheParams, staticIdForMetadataUseOnly: Int)(implicit p: Parameters) extends LazyModule
 {
   lazy val module = new BoomFrontendModule(this)
-  val icache = LazyModule(new boom.ifu.ICache(icacheParams, staticIdForMetadataUseOnly))
+  val icache = LazyModule(new ocelot.ifu.ICache(icacheParams, staticIdForMetadataUseOnly))
   val masterNode = icache.masterNode
   val resetVectorSinkNode = BundleBridgeSink[UInt](Some(() =>
     UInt(masterNode.edges.out.head.bundle.addressBits.W)))

@@ -9,15 +9,15 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-package boom.exu
+package ocelot.exu
 
 import chisel3._
 import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
 import freechips.rocketchip.tile.FPConstants._
 import freechips.rocketchip.tile
-import boom.common._
-import boom.util._
+import ocelot.common._
+import ocelot.util._
 import freechips.rocketchip.tile.HasFPUParameters
 import freechips.rocketchip.util.uintToBitPat
 

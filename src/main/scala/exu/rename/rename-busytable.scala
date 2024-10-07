@@ -9,12 +9,12 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-package boom.exu
+package ocelot.exu
 
 import chisel3._
 import chisel3.util._
-import boom.common._
-import boom.util._
+import ocelot.common._
+import ocelot.util._
 import org.chipsalliance.cde.config.Parameters
 
 class BusyResp extends Bundle

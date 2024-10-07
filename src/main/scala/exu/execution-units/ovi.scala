@@ -1,5 +1,5 @@
 // See LICENSE.TT for license details.
-package boom.exu
+package ocelot.exu
 
 import chisel3._
 import chisel3.util._
@@ -7,8 +7,8 @@ import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
 import freechips.rocketchip.rocket.{VConfig, VType}
 
-import boom.common._
-import boom.util._
+import ocelot.common._
+import ocelot.util._
 
 /** Request queue that supports speculation.
  * 
@@ -159,7 +159,7 @@ class OviWrapperCoreIO(implicit p: Parameters) extends BoomBundle
 
   val vconfig = Input(new VConfig())
   val vxrm    = Input(UInt(2.W))
-  val vGenIO  = Flipped(new boom.lsu.VGenIO)
+  val vGenIO  = Flipped(new ocelot.lsu.VGenIO)
   val debug_wb_vec_valid = Output(Bool())
   val debug_wb_vec_wdata = Output(UInt((vLen * 8).W))
   val debug_wb_vec_wmask = Output(UInt(8.W))

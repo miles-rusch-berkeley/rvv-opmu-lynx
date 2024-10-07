@@ -3,7 +3,7 @@
 // All Rights Reserved. See LICENSE and LICENSE.SiFive for license details.
 //------------------------------------------------------------------------------
 
-package boom.tests
+package ocelot.tests
 
 import org.scalatest._
 
@@ -17,7 +17,7 @@ import freechips.rocketchip.tilelink._
 import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.subsystem._
 
-import boom.system._
+import ocelot.system._
 
 /**
  * Factory object to help create a set of BOOM parameters to use in tests
@@ -53,7 +53,7 @@ object BoomTestUtils {
     }
   }
 
-  def getBoomParameters(configName: String, configPackage: String = "boom.system"): Parameters = {
+  def getBoomParameters(configName: String, configPackage: String = "ocelot.system"): Parameters = {
     // get the full path to the config
     val fullConfigName = configPackage + "." + configName
 

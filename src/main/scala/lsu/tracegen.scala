@@ -1,4 +1,4 @@
-package boom.lsu
+package ocelot.lsu
 
 import chisel3._
 import chisel3.util._
@@ -11,8 +11,8 @@ import freechips.rocketchip.tile._
 import freechips.rocketchip.tilelink.{TLInwardNode, TLIdentityNode, TLOutwardNode, TLTempNode}
 import freechips.rocketchip.interrupts._
 import freechips.rocketchip.subsystem._
-import boom.lsu.{BoomNonBlockingDCache, LSU, LSUCoreIO}
-import boom.common.{BoomTileParams, MicroOp, BoomCoreParams, BoomModule}
+import ocelot.lsu.{BoomNonBlockingDCache, LSU, LSUCoreIO}
+import ocelot.common.{BoomTileParams, MicroOp, BoomCoreParams, BoomModule}
 import freechips.rocketchip.prci.ClockSinkParameters
 
 
@@ -147,7 +147,7 @@ class BoomLSUShim(implicit p: Parameters) extends BoomModule()(p)
   io.lsu.rob_pnr_idx := rob_tail
   io.lsu.commit_load_at_rob_head := false.B
 
-  io.lsu.brupdate.b1 := (0.U).asTypeOf(new boom.exu.BrUpdateMasks)
+  io.lsu.brupdate.b1 := (0.U).asTypeOf(new ocelot.exu.BrUpdateMasks)
   io.lsu.brupdate.b2.uop := DontCare
   io.lsu.brupdate.b2.mispredict := false.B
   io.lsu.brupdate.b2.taken := false.B
@@ -251,6 +251,6 @@ class BoomTraceGenTileModuleImp(outer: BoomTraceGenTile)
   status.timeout.bits := 0.U
   status.error.valid := false.B
 
-  assert(!tracegen.io.timeout, s"TraceGen tile ${outer.tileParams.hartId}: request timed out")
+  assert(!tracegen.io.timeout, s"TraceGen tile ${outer.tileParams.tileId}: request timed out")
 
 }

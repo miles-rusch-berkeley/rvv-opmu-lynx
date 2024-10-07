@@ -3,13 +3,13 @@
 // All Rights Reserved. See LICENSE and LICENSE.SiFive for license details.
 //------------------------------------------------------------------------------
 
-package boom
+package ocelot
 
 package object common extends
-  boom.common.constants.ScalarOpConstants with
-  boom.common.constants.ExcCauseConstants with
-  boom.common.constants.RISCVConstants with
-  boom.common.constants.IQType
+  ocelot.common.constants.ScalarOpConstants with
+  ocelot.common.constants.ExcCauseConstants with
+  ocelot.common.constants.RISCVConstants with
+  ocelot.common.constants.IQType
 {
 }
 

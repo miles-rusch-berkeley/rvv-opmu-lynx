@@ -3,11 +3,10 @@
 // All Rights Reserved. See LICENSE and LICENSE.SiFive for license details.
 //------------------------------------------------------------------------------
 
-package boom.ifu
+package ocelot.ifu
 
 import chisel3._
 import chisel3.util._
-import chisel3.internal.sourceinfo.{SourceInfo}
 
 import org.chipsalliance.cde.config._
 import freechips.rocketchip.subsystem._
@@ -19,9 +18,9 @@ import freechips.rocketchip.util._
 import freechips.rocketchip.util.property._
 
 
-import boom.common._
-import boom.exu.{CommitExceptionSignals, BranchDecode, BrUpdateInfo}
-import boom.util._
+import ocelot.common._
+import ocelot.exu.{CommitExceptionSignals, BranchDecode, BrUpdateInfo}
+import ocelot.util._
 
 class BoomRAS(implicit p: Parameters) extends BoomModule()(p)
 {

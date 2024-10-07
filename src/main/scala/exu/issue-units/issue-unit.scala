@@ -9,7 +9,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-package boom.exu
+package ocelot.exu
 
 import chisel3._
 import chisel3.util._
@@ -17,9 +17,9 @@ import chisel3.util._
 import org.chipsalliance.cde.config.Parameters
 import freechips.rocketchip.util.{Str}
 
-import boom.common._
-import boom.exu.FUConstants._
-import boom.util.{BoolToChar}
+import ocelot.common._
+import ocelot.exu.FUConstants._
+import ocelot.util.{BoolToChar}
 
 /**
  * Class used for configurations

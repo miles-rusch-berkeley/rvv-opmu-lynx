@@ -3,7 +3,7 @@
 // All Rights Reserved. See LICENSE and LICENSE.SiFive for license details.
 //------------------------------------------------------------------------------
 
-package boom.common
+package ocelot.common
 
 import chisel3._
 import chisel3.util.{RRArbiter, Queue}
@@ -14,7 +14,7 @@ import org.chipsalliance.cde.config._
 import freechips.rocketchip.subsystem._
 import freechips.rocketchip.devices.tilelink._
 import freechips.rocketchip.diplomacy._
-
+import freechips.rocketchip.prci._
 import freechips.rocketchip.rocket._
 import freechips.rocketchip.subsystem.{RocketCrossingParams}
 import freechips.rocketchip.tilelink._
@@ -22,10 +22,10 @@ import freechips.rocketchip.interrupts._
 import freechips.rocketchip.util._
 import freechips.rocketchip.tile._
 
-import boom.exu._
-import boom.ifu._
-import boom.lsu._
-import boom.util.{BoomCoreStringPrefix}
+import ocelot.exu._
+import ocelot.ifu._
+import ocelot.lsu._
+import ocelot.util.{BoomCoreStringPrefix}
 import freechips.rocketchip.prci.ClockSinkParameters
 
 
@@ -53,7 +53,7 @@ case class BoomTileParams(
 {
   require(icache.isDefined)
   require(dcache.isDefined)
-  def instantiate(crossing: TileCrossingParamsLike, lookup: LookupByHartIdImpl)(implicit p: Parameters): BoomTile = {
+  def instantiate(crossing: HierarchicalElementCrossingParamsLike, lookup: LookupByHartIdImpl)(implicit p: Parameters): BoomTile = {
     new BoomTile(this, crossing, lookup)
   }
   val beuAddr: Option[BigInt] = None
@@ -77,10 +77,10 @@ class BoomTile private(
 {
 
   // Private constructor ensures altered LazyModule.p is used implicitly
-  def this(params: BoomTileParams, crossing: TileCrossingParamsLike, lookup: LookupByHartIdImpl)(implicit p: Parameters) =
+  def this(params: BoomTileParams, crossing: HierarchicalElementCrossingParamsLike, lookup: LookupByHartIdImpl)(implicit p: Parameters) =
     this(params, crossing.crossingType, lookup, p)
 
-  val intOutwardNode = IntIdentityNode()
+  val intOutwardNode = None
   val masterNode = TLIdentityNode()
   val slaveNode = TLIdentityNode()
 
@@ -107,7 +107,7 @@ class BoomTile private(
   }
 
   ResourceBinding {
-    Resource(cpuDevice, "reg").bind(ResourceAddress(staticIdForMetadataUseOnly))
+    Resource(cpuDevice, "reg").bind(ResourceAddress(tileId))
   }
 
   override def makeMasterBoundaryBuffers(crossing: ClockCrossingType)(implicit p: Parameters) = crossing match {
@@ -127,13 +127,12 @@ class BoomTile private(
   override lazy val module = new BoomTileModuleImp(this)
 
   // DCache
-  lazy val dcache: BoomNonBlockingDCache = LazyModule(new BoomNonBlockingDCache(staticIdForMetadataUseOnly))
+  lazy val dcache: BoomNonBlockingDCache = LazyModule(new BoomNonBlockingDCache(tileId))
   val dCacheTap = TLIdentityNode()
   tlMasterXbar.node := dCacheTap := TLWidthWidget(tileParams.dcache.get.rowBits/8) := visibilityNode := dcache.node
 
-
   // Frontend/ICache
-  val frontend = LazyModule(new BoomFrontend(tileParams.icache.get, staticIdForMetadataUseOnly))
+  val frontend = LazyModule(new BoomFrontend(tileParams.icache.get, tileId))
   frontend.resetVectorSinkNode := resetVectorNexusNode
   tlMasterXbar.node := TLWidthWidget(tileParams.icache.get.rowBits/8) := frontend.masterNode
 
@@ -199,7 +198,7 @@ class BoomTileModuleImp(outer: BoomTile) extends BaseTileModuleImp(outer){
           // This FPU does not get CPU requests
           fpu.io := DontCare
           fpu.io.fcsr_rm := core.io.fcsr_rm
-          fpu.io.dmem_resp_val := false.B
+          fpu.io.ll_resp_val := false.B
           fpu.io.valid := false.B
           fpu.io.killx := false.B
           fpu.io.killm := false.B
@@ -240,7 +239,7 @@ class BoomTileModuleImp(outer: BoomTile) extends BaseTileModuleImp(outer){
   val frontendStr = outer.frontend.module.toString
   val coreStr = core.toString
   val boomTileStr =
-    (BoomCoreStringPrefix(s"======BOOM Tile ${staticIdForMetadataUseOnly} Params======") + "\n"
+    (BoomCoreStringPrefix(s"======BOOM Tile ${outer.tileId} Params======") + "\n"
     + frontendStr
     + coreStr + "\n")
 

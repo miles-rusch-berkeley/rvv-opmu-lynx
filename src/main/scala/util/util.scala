@@ -9,7 +9,7 @@
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-package boom.util
+package ocelot.util
 
 import chisel3._
 import chisel3.util._
@@ -20,8 +20,8 @@ import freechips.rocketchip.util.{Str}
 import org.chipsalliance.cde.config.{Parameters}
 import freechips.rocketchip.tile.{TileKey}
 
-import boom.common.{MicroOp}
-import boom.exu.{BrUpdateInfo}
+import ocelot.common.{MicroOp}
+import ocelot.exu.{BrUpdateInfo}
 
 /**
  * Object to XOR fold a input register of fullLength into a compressedLength.
@@ -97,12 +97,12 @@ object UpdateBrMask
     out.br_mask := GetNewBrMask(brupdate, uop)
     out
   }
-  def apply[T <: boom.common.HasBoomUOP](brupdate: BrUpdateInfo, bundle: T): T = {
+  def apply[T <: ocelot.common.HasBoomUOP](brupdate: BrUpdateInfo, bundle: T): T = {
     val out = WireInit(bundle)
     out.uop.br_mask := GetNewBrMask(brupdate, bundle.uop.br_mask)
     out
   }
-  def apply[T <: boom.common.HasBoomUOP](brupdate: BrUpdateInfo, bundle: Valid[T]): Valid[T] = {
+  def apply[T <: ocelot.common.HasBoomUOP](brupdate: BrUpdateInfo, bundle: Valid[T]): Valid[T] = {
     val out = WireInit(bundle)
     out.bits.uop.br_mask := GetNewBrMask(brupdate, bundle.bits.uop.br_mask)
     out.valid := bundle.valid && !IsKilledByBranch(brupdate, bundle.bits.uop.br_mask)
@@ -268,7 +268,7 @@ object Sext
  */
 object ImmGen
 {
-  import boom.common.{LONGEST_IMM_SZ, IS_B, IS_I, IS_J, IS_S, IS_U, IS_IVLI}
+  import ocelot.common.{LONGEST_IMM_SZ, IS_B, IS_I, IS_J, IS_S, IS_U, IS_IVLI}
   def apply(ip: UInt, isel: UInt): SInt = {
     val sign   = Mux(isel === IS_IVLI, 0.S, ip(LONGEST_IMM_SZ-1).asSInt)
     val i30_20 = Mux(isel === IS_IVLI, 0.S,
@@ -452,10 +452,10 @@ class Compactor[T <: chisel3.Data](n: Int, k: Int, gen: T) extends Module
  * Create a queue that can be killed with a branch kill signal.
  * Assumption: enq.valid only high if not killed by branch (so don't check IsKilled on io.enq).
  */
-class BranchKillableQueue[T <: boom.common.HasBoomUOP](gen: T, entries: Int, flush_fn: boom.common.MicroOp => Bool = u => true.B, flow: Boolean = true)
+class BranchKillableQueue[T <: ocelot.common.HasBoomUOP](gen: T, entries: Int, flush_fn: ocelot.common.MicroOp => Bool = u => true.B, flow: Boolean = true)
   (implicit p: org.chipsalliance.cde.config.Parameters)
-  extends boom.common.BoomModule()(p)
-  with boom.common.HasBoomCoreParameters
+  extends ocelot.common.BoomModule()(p)
+  with ocelot.common.HasBoomCoreParameters
 {
   val io = IO(new Bundle {
     val enq     = Flipped(Decoupled(gen))
@@ -659,7 +659,7 @@ object BoomCoreStringPrefix
   * @return String combining the list with the prefix per line
   */
   def apply(strs: String*)(implicit p: Parameters) = {
-    val prefix = "[C" + s"${p(TileKey).hartId}" + "] "
+    val prefix = "[C" + s"${p(TileKey).tileId}" + "] "
     strs.map(str => prefix + str + "\n").mkString("")
   }
 }

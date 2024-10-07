@@ -3,7 +3,7 @@
 // All Rights Reserved. See LICENSE and LICENSE.SiFive for license details.
 //------------------------------------------------------------------------------
 
-package boom.common
+package ocelot.common
 
 import chisel3._
 import chisel3.util.{log2Up}
@@ -11,13 +11,13 @@ import chisel3.util.{log2Up}
 import org.chipsalliance.cde.config.{Parameters, Config, Field}
 import freechips.rocketchip.subsystem._
 import freechips.rocketchip.devices.tilelink.{BootROMParams}
-import freechips.rocketchip.diplomacy.{SynchronousCrossing, AsynchronousCrossing, RationalCrossing}
+import freechips.rocketchip.prci.{SynchronousCrossing, AsynchronousCrossing, RationalCrossing}
 import freechips.rocketchip.rocket._
 import freechips.rocketchip.tile._
 
-import boom.ifu._
-import boom.exu._
-import boom.lsu._
+import ocelot.ifu._
+import ocelot.exu._
+import ocelot.lsu._
 
 // ---------------------
 // BOOM Config Fragments
@@ -146,7 +146,7 @@ class WithNSmallBooms(n: Int = 1, overrideIdOffset: Option[Int] = None) extends 
         )
       } ++ prev
     }
-    case XLen => 64
+    case xLen => 64
   })
 )
 
@@ -192,7 +192,7 @@ class WithNMediumBooms(n: Int = 1, overrideIdOffset: Option[Int] = None) extends
         )
       } ++ prev
     }
-    case XLen => 64
+    case xLen => 64
   })
 )
 // DOC include start: LargeBoomConfig
@@ -237,7 +237,7 @@ class WithNLargeBooms(n: Int = 1, overrideIdOffset: Option[Int] = None) extends 
         )
       } ++ prev
     }
-    case XLen => 64
+    case xLen => 64
   })
 )
 // DOC include end: LargeBoomConfig
@@ -284,7 +284,7 @@ class WithNMegaBooms(n: Int = 1, overrideIdOffset: Option[Int] = None) extends C
         )
       } ++ prev
     }
-    case XLen => 64
+    case xLen => 64
   })
 )
 
@@ -331,7 +331,7 @@ class WithNGigaBooms(n: Int = 1, overrideIdOffset: Option[Int] = None) extends C
         )
       } ++ prev
     }
-    case XLen => 64
+    case xLen => 64
   })
 )
 
@@ -345,7 +345,7 @@ class WithCloneBoomTiles(
   case TilesLocated(`location`) => {
     val prev = up(TilesLocated(location), site)
     val idOffset = overrideIdOffset.getOrElse(prev.size)
-    val tileAttachParams = up(TilesLocated(cloneLocation)).find(_.tileParams.hartId == cloneTileId)
+    val tileAttachParams = up(TilesLocated(cloneLocation)).find(_.tileParams.tileId == cloneTileId)
       .get.asInstanceOf[BoomTileAttachParams]
     (0 until n).map { i =>
       CloneTileAttachParams(cloneTileId, tileAttachParams.copy(
@@ -402,7 +402,7 @@ class WithNCS152BaselineBooms(n: Int = 1, overrideIdOffset: Option[Int] = None) 
         )
       } ++ prev
     }
-    case XLen => 64
+    case xLen => 64
   })
 )
 
@@ -451,7 +451,7 @@ class WithNCS152DefaultBooms(n: Int = 1, overrideIdOffset: Option[Int] = None) e
         )
       } ++ prev
     }
-    case XLen => 64
+    case xLen => 64
   })
 )
 

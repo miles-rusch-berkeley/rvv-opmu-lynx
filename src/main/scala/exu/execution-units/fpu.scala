@@ -3,7 +3,7 @@
 // All Rights Reserved. See LICENSE and LICENSE.SiFive for license details.
 //------------------------------------------------------------------------------
 
-package boom.exu
+package ocelot.exu
 
 import chisel3._
 import chisel3.util._
@@ -13,8 +13,8 @@ import freechips.rocketchip.tile.{FPUCtrlSigs, HasFPUParameters}
 import freechips.rocketchip.tile
 import freechips.rocketchip.rocket
 import freechips.rocketchip.util.uintToBitPat
-import boom.common._
-import boom.util.{ImmGenRm, ImmGenTyp}
+import ocelot.common._
+import ocelot.util.{ImmGenRm, ImmGenTyp}
 
 /**
  * FP Decoder for the FPU

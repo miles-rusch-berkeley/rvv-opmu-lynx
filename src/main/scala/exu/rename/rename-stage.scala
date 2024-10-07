@@ -15,15 +15,15 @@
 //
 // Ren1 data is provided as an output to be fed directly into the ROB.
 
-package boom.exu
+package ocelot.exu
 
 import chisel3._
 import chisel3.util._
 
 import org.chipsalliance.cde.config.Parameters
 
-import boom.common._
-import boom.util._
+import ocelot.common._
+import ocelot.util._
 
 /**
  * IO bundle to interface with the Register Rename logic

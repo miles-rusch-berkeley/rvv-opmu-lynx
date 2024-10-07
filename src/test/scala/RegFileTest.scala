@@ -3,7 +3,7 @@
 // All Rights Reserved. See LICENSE and LICENSE.SiFive for license details.
 //------------------------------------------------------------------------------
 
-package boom.tests
+package ocelot.tests
 
 import scala.util.Random
 
@@ -19,9 +19,9 @@ import freechips.rocketchip.tile._
 import freechips.rocketchip.tilelink._
 import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.subsystem._
-import boom.system._
+import ocelot.system._
 
-import boom.exu.{RegisterFile, RegisterFileSynthesizable, RegisterFileSeqCustomArray}
+import ocelot.exu.{RegisterFile, RegisterFileSynthesizable, RegisterFileSeqCustomArray}
 
 /**
  * Main register file tester

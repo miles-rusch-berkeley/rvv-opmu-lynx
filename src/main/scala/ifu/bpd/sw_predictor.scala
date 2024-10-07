@@ -1,4 +1,4 @@
-package boom.ifu
+package ocelot.ifu
 
 import chisel3._
 import chisel3.util._
@@ -7,9 +7,9 @@ import org.chipsalliance.cde.config.{Field, Parameters}
 import freechips.rocketchip.diplomacy._
 import freechips.rocketchip.tilelink._
 
-import boom.common._
-import boom.exu.{CommitExceptionSignals}
-import boom.util.{BoomCoreStringPrefix}
+import ocelot.common._
+import ocelot.exu.{CommitExceptionSignals}
+import ocelot.util.{BoomCoreStringPrefix}
 
 
 class SwBranchPredictorBank(implicit p: Parameters) extends BranchPredictorBank()(p)

@@ -1,4 +1,4 @@
-package boom.lsu
+package ocelot.lsu
 
 import chisel3._
 import chisel3.util._
@@ -10,9 +10,9 @@ import freechips.rocketchip.subsystem.{CacheBlockBytes}
 import freechips.rocketchip.diplomacy.{RegionType}
 import freechips.rocketchip.util._
 
-import boom.common._
-import boom.exu.{BrResolutionInfo, Exception, FuncUnitResp, CommitSignals}
-import boom.util.{BoolToChar, AgePriorityEncoder, IsKilledByBranch, GetNewBrMask, WrapInc, IsOlder, UpdateBrMask}
+import ocelot.common._
+import ocelot.exu.{BrResolutionInfo, Exception, FuncUnitResp, CommitSignals}
+import ocelot.util.{BoolToChar, AgePriorityEncoder, IsKilledByBranch, GetNewBrMask, WrapInc, IsOlder, UpdateBrMask}
 
 class NBDTLB(instruction: Boolean, lgMaxSize: Int, cfg: TLBConfig)(implicit edge: TLEdgeOut, p: Parameters) extends BoomModule()(p) {
   require(!instruction)

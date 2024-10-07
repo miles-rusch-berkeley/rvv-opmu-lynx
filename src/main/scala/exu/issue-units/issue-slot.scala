@@ -13,15 +13,15 @@
 // TODO XXX make a separate issueSlot for MemoryIssueSlots, and only they break apart stores.
 // TODO Disable ldspec for FP queue.
 
-package boom.exu
+package ocelot.exu
 
 import chisel3._
 import chisel3.util._
 
 import org.chipsalliance.cde.config.Parameters
 
-import boom.common._
-import boom.util._
+import ocelot.common._
+import ocelot.util._
 import FUConstants._
 
 /**

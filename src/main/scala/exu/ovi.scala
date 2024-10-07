@@ -1,5 +1,5 @@
 // See LICENSE.TT for license details.
-package boom.exu
+package ocelot.exu
 
 import chisel3._
 import chisel3.util._
@@ -8,11 +8,11 @@ import chisel3.experimental._
 import org.chipsalliance.cde.config.Parameters
 import freechips.rocketchip.rocket.{VConfig}
 
-import boom.exu.FUConstants._
-import boom.common._
-import boom.exu._
-import boom.util._
-import boom.lsu.{LSUExeIO}
+import ocelot.exu.FUConstants._
+import ocelot.common._
+import ocelot.exu._
+import ocelot.util._
+import ocelot.lsu.{LSUExeIO}
 
 import hardfloat._
 
@@ -33,7 +33,7 @@ class OviWrapper(implicit p: Parameters) extends BoomModule
     val vxrm    = Input(UInt(2.W))
     val fcsr_rm = Input(UInt(3.W))
 
-    val vGenIO = Flipped(new boom.lsu.VGenIO)
+    val vGenIO = Flipped(new ocelot.lsu.VGenIO)
 
     val debug_wb_vec_valid = Output(Bool())
     val debug_wb_vec_wdata = Output(UInt((vLen * 8).W))
