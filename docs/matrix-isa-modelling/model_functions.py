@@ -48,7 +48,7 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
         max(ml, kc)
     ]
     t_crit = t_op[t_op_ind]/width_mmu**2
-    t_uk = 2*t_mem + (2*ml + kc)/width_mmu**2
+    t_uk = 2*t_mem + t_crit
     t_eff_opacc = max(t_uk, num_mregs*t_crit)
 
     insts_cycle = (kc/kl)/t_eff_opacc
@@ -84,6 +84,14 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     reg_cell = 20 #cmos gates
     mrf_gates = mrf_capacity*8*reg_cell
     opu_gates = mrf_gates + macc_gates
+    gates_vec = opu_gates/(vl*macc_cell)
+
+    #compare to vector unit
+    t_vec_crit = 1 + kc*ml/width_mmu
+    t_uk_vec = 2*t_mem + t_vec_crit
+    t_eff_opacc_vec = max(t_uk_vec, ml*t_vec_crit)
+    t_blas_vec = t_eff_opacc_vec*iterM*iterN
+    speedup_vec = t_blas_vec/t_blas
 
     perf_specs = {
         't_uk': t_uk,
@@ -101,6 +109,8 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
         'max_mem_bw': max_mem_bw,
         'mrf_capacity': mrf_capacity/2**10, # [kB]
         'mrf_bw': mrf_bw,
+        'speedup_vec': speedup_vec,
+        'gates_vec': gates_vec,
 
         'mrf_gates': mrf_gates,
         'macc_gates': macc_gates,
@@ -120,7 +130,7 @@ def generate_df(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op,
     df_columns = ['t_uk', 'util',
                   'ops_cycle', 'max_mregs', 'max_mrf_capacity',
                   'mem_bw', 'max_mem_bw',
-                  'mrf_capacity', 'mrf_bw', 
+                  'mrf_capacity', 'mrf_bw', 'speedup_vec', 'gates_vec',
                   'macc_gates', 'mrf_gates', 'opu_gates', 
                   'insts_cycle']
     df = pd.DataFrame(index=df_index, columns=df_columns,dtype=float)
@@ -142,6 +152,8 @@ def generate_df(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op,
         df.loc[idx, 'mem_bw'] = perf_specs['mem_bw']
         df.loc[idx, 'max_mem_bw'] = perf_specs['max_mem_bw']
         df.loc[idx, 'mrf_bw'] = perf_specs['mrf_bw']
+        df.loc[idx, 'speedup_vec'] = perf_specs['speedup_vec']
+        df.loc[idx, 'gates_vec'] = perf_specs['gates_vec']
         df.loc[idx, 'mrf_capacity'] = perf_specs['mrf_capacity']
         df.loc[idx, 'mrf_gates'] = perf_specs['mrf_gates']
         df.loc[idx, 'macc_gates'] = perf_specs['macc_gates']
@@ -150,11 +162,11 @@ def generate_df(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op,
 
 # Use `init_pm` to initialize model with desired input ranges. Defaults are scalars to allow for easy sweeping of one variable.
 def init_pm(
-    databits = np.array([64]),
+    databits = np.array([32]),
     t_mem = np.array([20]),     # [cycles]
-    M = np.array([16]),         # [num rows]
-    N = np.array([16]),         # [num rows]
-    K = np.array([16]),         # [num rows]
+    M = np.array([4]),         # [num elements]
+    N = np.array([4]),         # [num elements]
+    K = np.array([4]),         # [num elements]
     l2_cache = np.array([256]), # [KBytes]
     kl = np.array([1]),         # [num rows]
     vlB = np.array([256])/8,    # [Bytes]
