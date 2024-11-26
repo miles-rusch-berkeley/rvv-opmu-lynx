@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import math
 from tqdm import tqdm
 
-def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op_ind, width_mmu):
+def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op_ind, widen, width_mmu):
     """
     From 
         databits: number of bits per vector element 
@@ -15,6 +15,7 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
         vlB, mlB: bytes per vector, vectors per matrix register
         num_regs: number of 2D matrix registers
         t_op_ind: select functional unit latency
+        widen: widening factor between input and output elements
         width_mmu: half width reduces bw and increases latency both by a factor of four
     Calculate 
         'mem_bw': average memory bandwidth,
@@ -30,14 +31,15 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     ml = min(M, mlf)
     vlf = vlB/(databits/8)
     vl = min(N, vlf)
-    kl = min(K, kl)
+    # kl = min(K, kl)
+    
     # CACHE
     # double buffer B[kl * vlB] and C[ml * vlB]*nregs
     # a = mlB*(kc+kl) * num_mregs
     c = ml*vlB 
     mc = min(M, num_mregs * ml)
     l2_cache_B = l2_cache*2**10
-    kc = (l2_cache_B - 2*c)/(mc * databits + vlB) - kl
+    kc = (l2_cache_B - 2*c)/(mc * databits + vlB)
     kc = min(kc, K)
     l3_size = N*kc*databits/2**23 #[MB]
 
@@ -51,17 +53,13 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     t_uk = 2*t_mem + t_crit
     t_eff_opacc = max(t_uk, num_mregs*t_crit)
 
-    insts_cycle = (kc/kl)/t_eff_opacc
-
     util_t = min(1, num_mregs*kc/t_uk)
     util_a = M*N / (ml*math.ceil(M/ml) * vl*math.ceil(N/vl))
     util = util_t*util_a
-    ops_cycle = util*ml*vl*(databits/8)
+    ops_cycle = util*ml*vl*(databits/8)/kl
 
     p_l2_op = t_uk/t_crit
     max_mregs = math.ceil(p_l2_op)
-    max_mrf_capacity = max_mregs*(ml*vlB + mlB*kl + vlB*kl)/2**10
-    #TODO: p_l3_l2 = t_l2*bw_l2
 
     a_mem = num_mregs*mc*kc*databits/8
     b_mem = kc*vlB
@@ -74,13 +72,17 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     max_mem_bw = (ml*vlB + kc*mlB + kc*vlB)/t_crit
     
     # M REGFILE
-    mrf_capacity = num_mregs*(ml*vlB + mlB*kl + vlB*kl)
-    mrf_bw = ml*vlB/t_crit + mlB + vlB
+    ms_a = mlB
+    ms_b = vlB
+    md_c = ml*vlB/kl**2
+    max_mrf_capacity = max_mregs*(ms_a+ms_b+md_c)/2**10
+    mrf_capacity = num_mregs*(ms_a+ms_b+md_c)
+    mrf_bw = md_c/t_crit + ms_a + ms_b
 
     #macc cell area in units of 1b adders
     adder_cell = 20 #cmos gates
     macc_cell = adder_cell*databits**2
-    macc_gates = vl*ml*macc_cell
+    macc_gates = vlf*ml*macc_cell/kl
     reg_cell = 20 #cmos gates
     mrf_gates = mrf_capacity*8*reg_cell
     opu_gates = mrf_gates + macc_gates
