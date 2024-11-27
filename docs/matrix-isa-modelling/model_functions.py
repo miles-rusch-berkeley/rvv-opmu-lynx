@@ -36,18 +36,17 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     # CACHE
     # double buffer B[kl * vlB] and C[ml * vlB]*nregs
     # a = mlB*(kc+kl) * num_mregs
-    c = ml*vlB 
     mc = min(M, num_mregs * ml)
     l2_cache_B = l2_cache*2**10
-    kc = (l2_cache_B - 2*c)/(mc * databits + vlB)
+    kc = (l2_cache_B - 2*ml*vlB)/(mc * databits + vlB)
     kc = min(kc, K)
     l3_size = N*kc*databits/2**23 #[MB]
 
     #different opacc fu latencies
     t_op = [
-        2*ml + kc,
-        ml + kc,
-        max(ml, kc)
+        2*ml + kc*kl,
+        ml + kc*kl,
+        max(ml, kc*kl)
     ]
     t_crit = t_op[t_op_ind]/width_mmu**2
     t_uk = 2*t_mem + t_crit
