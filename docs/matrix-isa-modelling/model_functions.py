@@ -161,7 +161,7 @@ def generate_df(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op,
 
 # Use `init_pm` to initialize model with desired input ranges. Defaults are scalars to allow for easy sweeping of one variable.
 def init_pm(
-    databits = np.array([32]),
+    databits = np.array([8]),
     t_mem = np.array([20]),     # [cycles]
     M = np.array([4]),         # [num elements]
     N = np.array([4]),         # [num elements]
