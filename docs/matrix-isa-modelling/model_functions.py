@@ -25,22 +25,22 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
         'mrf_bw': matrix register file bandwidth
         'mrf_capacity': matrix register file capacity
     """
-    # calculate number of parallel memory requests to hide latency
     mlf = mlB/(databits/8) #num MMU rows equals number of elements ml
     ml = min(M, mlf)
     vlf = vlB/(databits/8)
     vl = min(N, vlf)
-    c_tile = ml*vlB * widen
+    c_tile = widen * ml*vlB/kl**2
     # kl = min(K, kl)
     
     # CACHE
+    # TODO: kc
     # double buffer B[kl * vlB] and C[ml * vlB]*nregs
     # a = mlB*(kc+kl) * num_mregs
     mc = min(M, num_mregs * ml)
     l2_cache_B = l2_cache*2**10
     kc = (l2_cache_B - 2*c_tile)/(mc * databits + vlB)
     kc = min(kc, K)
-    l3_size = N*kc*databits/2**23 #[MB]
+    l3_capacity = N*kc*databits/2**23 #[MB]
 
     #different opacc fu latencies
     t_op = [
@@ -57,6 +57,7 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     util = util_t*util_a
     ops_cycle = util*ml*vl*(databits/8)/kl
 
+    # number of parallel memory requests to hide latency
     p_l2_op = t_uk/t_crit
     max_mregs = math.ceil(p_l2_op)
 
@@ -71,9 +72,9 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     max_mem_bw = (c_tile + kc*mlB + kc*vlB)/t_crit
     
     # M REGFILE
-    ms_a = mlB
-    ms_b = vlB
-    md_c = c_tile/kl**2
+    ms_a = mlB*kl
+    ms_b = vlB*kl
+    md_c = widen * mlf*vlB/kl**2
     max_mrf_capacity = max_mregs*(ms_a+ms_b+md_c)
     mrf_capacity = num_mregs*(ms_a+ms_b+md_c)
     mrf_bw = md_c/t_crit + ms_a + ms_b
@@ -81,7 +82,7 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     #macc cell area in units of 1b adders
     adder_cell = 20 #cmos gates
     macc_cell = adder_cell*databits**2
-    macc_gates = vlf*ml*macc_cell/kl
+    macc_gates = vlf*mlf*macc_cell/kl
     reg_cell = 20 #cmos gates
     mrf_gates = mrf_capacity*8*reg_cell
     opu_gates = mrf_gates + macc_gates
@@ -104,7 +105,7 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
         'max_mregs': max_mregs,
         'mrf_capacity': mrf_capacity/2**10,         # [kB]
         'max_mrf_capacity': max_mrf_capacity/2**10, # [kB]
-        # 'l3_size': l3_size,
+        'l3_capacity': l3_capacity,
         'mem_bw': mem_bw,
         'max_mem_bw': max_mem_bw,
         'mrf_bw': mrf_bw,
@@ -129,7 +130,8 @@ def generate_df(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op,
     df_columns = ['t_uk', 'util',
                   'ops_cycle', 'max_mregs', 'max_mrf_capacity',
                   'mem_bw', 'max_mem_bw',
-                  'mrf_capacity', 'mrf_bw', 'speedup_vec', 'gates_vec',
+                  'mrf_capacity', 'l3_capacity', 
+                  'mrf_bw', 'speedup_vec', 'gates_vec',
                   'macc_gates', 'mrf_gates', 'opu_gates']
     df = pd.DataFrame(index=df_index, columns=df_columns,dtype=float)
 
@@ -145,7 +147,7 @@ def generate_df(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op,
         
         df.loc[idx, 'max_mregs'] = perf_specs['max_mregs']
         df.loc[idx, 'max_mrf_capacity'] = perf_specs['max_mrf_capacity']
-        # df.loc[idx, 'l3_size'] = perf_specs['l3_size']
+        df.loc[idx, 'l3_capacity'] = perf_specs['l3_capacity']
         df.loc[idx, 'mem_bw'] = perf_specs['mem_bw']
         df.loc[idx, 'max_mem_bw'] = perf_specs['max_mem_bw']
         df.loc[idx, 'mrf_bw'] = perf_specs['mrf_bw']
