@@ -77,9 +77,9 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     md_c = widen * mlf*vlB/kl**2
     max_mrf_capacity = max_mregs*(ms_a+ms_b+md_c)
     mrf_capacity = num_mregs*(ms_a+ms_b+md_c)
-    mrf_bw = md_c/t_crit + ms_a + ms_b
+    mrf_bw = md_c/t_crit + (ms_a + ms_b)/kl
 
-    #macc cell area in units of 1b adders
+    #macc cell area estimate in cmos gates
     adder_cell = 20 #cmos gates
     macc_cell = adder_cell*databits**2
     macc_gates = vlf*mlf*macc_cell/kl
