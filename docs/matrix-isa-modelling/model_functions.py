@@ -18,11 +18,10 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
         widen: widening factor between input and output elements
         width_mmu: half width reduces bw and increases latency both by a factor of four
     Calculate 
-        'mem_bw': average memory bandwidth,
-        'max_mem_bw': peak memory bandwidth,
+        'mem_bw': average memory bandwidth for outer product BLAS schedule,
+        'mrf_bw': matrix register file bandwidth
         't_uk': ukernel latency,
         'ops_cycle': macc operations per cycle,
-        'mrf_bw': matrix register file bandwidth
         'mrf_capacity': matrix register file capacity
     """
     mlf = mlB/(databits/8) #num MMU rows equals number of elements ml
@@ -52,8 +51,23 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     t_uk = 2*t_mem + t_crit
     t_eff_opacc = max(t_uk, num_mregs*t_crit)
 
+    rN = N%vlf
+    rM = M%mlf
+    rK = K%kl
+    iM = math.floor(M/mc)
+    iN = math.floor(N/vl)
+    iK = math.floor(K/kc)
+    util_a = (iN*iM*iK * vl*ml*kl 
+              +  iN*iM * vl*ml*rK 
+              +  iN*iK * vl*rM*kl 
+              +  iK*iM * rN*ml*kl 
+              )/((iN+1)*(iM+1)*(iK+1) * ml*vl*kl)
+    print("vl: ", vl, "ml: ", ml, "kl: ", kl)
+    print("N: ", N, "M: ", M, "K: ", K)
+    print("rN: ", rN, "rM: ", rM, "rK: ", rK)
+    print("iM: ", iM, "iN: ", iN, "iK: ", iK)
+    print(util_a)
     util_t = min(1, num_mregs*kc/t_uk)
-    util_a = M*N / (ml*math.ceil(M/ml) * vl*math.ceil(N/vl))
     util = util_t*util_a
     ops_cycle = util*ml*vl*(databits/8)/kl
 
@@ -64,12 +78,10 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     a_mem = num_mregs*mc*kc*databits/8
     b_mem = kc*vlB
     c_mem = num_mregs * c_tile
-    iterM = M/mc
-    iterN = N/vl
-    # iterK = K/kc
-    t_blas = t_eff_opacc*iterM*iterN
-    mem_bw = (c_mem*iterM*iterN + a_mem*iterM + b_mem)/t_blas
-    max_mem_bw = (c_tile + kc*mlB + kc*vlB)/t_crit
+    t_blas = t_eff_opacc*iM*iN
+    nmk_mem_bw = (c_mem + K*(a_mem + b_mem))/t_eff_opacc
+    knmk_mem_bw = iK*(b_mem + iM*(a_mem + c_mem))/t_blas
+    mrf_bw = (c_tile + kc*(mlB + vlB))/t_crit
     
     # M REGFILE
     ms_a = mlB*kl
@@ -77,7 +89,6 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     md_c = widen * mlf*vlB/kl**2
     max_mrf_capacity = max_mregs*(ms_a+ms_b+md_c)
     mrf_capacity = num_mregs*(ms_a+ms_b+md_c)
-    mrf_bw = md_c/t_crit + (ms_a + ms_b)/kl
 
     #macc cell area estimate in cmos gates
     adder_cell = 20 #cmos gates
@@ -92,7 +103,7 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     t_vec_crit = 1 + kc*ml/width_mmu
     t_uk_vec = 2*t_mem + t_vec_crit
     t_eff_opacc_vec = max(t_uk_vec, ml*t_vec_crit)
-    t_blas_vec = t_eff_opacc_vec*iterM*iterN
+    t_blas_vec = t_eff_opacc_vec*iM*iN
     speedup_vec = t_blas_vec/t_blas
 
     perf_specs = {
@@ -106,8 +117,8 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
         'mrf_capacity': mrf_capacity/2**10,         # [kB]
         'max_mrf_capacity': max_mrf_capacity/2**10, # [kB]
         'l3_capacity': l3_capacity,
-        'mem_bw': mem_bw,
-        'max_mem_bw': max_mem_bw,
+        'nmk_mem_bw': nmk_mem_bw,
+        'knmk_mem_bw': knmk_mem_bw,
         'mrf_bw': mrf_bw,
         'speedup_vec': speedup_vec,
         'gates_vec': gates_vec,
@@ -129,9 +140,9 @@ def generate_df(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op,
     # Create columns of  DataFrame 
     df_columns = ['t_uk', 'util',
                   'ops_cycle', 'max_mregs', 'max_mrf_capacity',
-                  'mem_bw', 'max_mem_bw',
+                  'knmk_mem_bw', 'nmk_mem_bw', 'mrf_bw', 
                   'mrf_capacity', 'l3_capacity', 
-                  'mrf_bw', 'speedup_vec', 'gates_vec',
+                  'speedup_vec', 'gates_vec',
                   'macc_gates', 'mrf_gates', 'opu_gates']
     df = pd.DataFrame(index=df_index, columns=df_columns,dtype=float)
 
@@ -148,8 +159,8 @@ def generate_df(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op,
         df.loc[idx, 'max_mregs'] = perf_specs['max_mregs']
         df.loc[idx, 'max_mrf_capacity'] = perf_specs['max_mrf_capacity']
         df.loc[idx, 'l3_capacity'] = perf_specs['l3_capacity']
-        df.loc[idx, 'mem_bw'] = perf_specs['mem_bw']
-        df.loc[idx, 'max_mem_bw'] = perf_specs['max_mem_bw']
+        df.loc[idx, 'knmk_mem_bw'] = perf_specs['knmk_mem_bw']
+        df.loc[idx, 'nmk_mem_bw'] = perf_specs['nmk_mem_bw']
         df.loc[idx, 'mrf_bw'] = perf_specs['mrf_bw']
         df.loc[idx, 'speedup_vec'] = perf_specs['speedup_vec']
         df.loc[idx, 'gates_vec'] = perf_specs['gates_vec']
@@ -163,16 +174,16 @@ def generate_df(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op,
 def init_pm(
     databits = np.array([8]),
     t_mem = np.array([20]),     # [cycles]
-    M = np.array([4]),         # [num elements]
-    N = np.array([4]),         # [num elements]
-    K = np.array([4]),         # [num elements]
+    M = np.array([64]),         # [num elements]
+    N = np.array([64]),         # [num elements]
+    K = np.array([64]),         # [num elements]
     l2_cache = np.array([256]), # [KBytes]
     kl = np.array([1]),         # [num rows]
     vlB = np.array([256])/8,    # [Bytes]
     mlB = np.array([256])/8,    # [Bytes]
     num_mregs = np.array([2]),
     t_op = np.array([0]),     # [cycles]
-    widen = np.array([1]),      
+    widen = np.array([4]),      
     width_mmu = np.array([1]),     # [1 or 1/2]
     ):
     return generate_df(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op, widen, width_mmu)
