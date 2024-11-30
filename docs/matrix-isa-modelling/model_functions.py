@@ -5,6 +5,21 @@ import matplotlib.pyplot as plt
 import math
 from tqdm import tqdm
 
+def area_utilization(M, N, K, ml, vl, kl):
+    rN, rM, rK = N%vl, M%ml, K%kl
+    tM, tN, tK = ml-rM, vl-rN, kl-rK
+    iM, iN, iK = math.ceil(M/ml), math.ceil(N/vl), math.ceil(K/kl)
+    util_a  = (iN-1)*(iM-1)*(iK-1)  * vl*ml*kl 
+    util_a += (iN-1)*(iM-1)         * vl*ml*tK 
+    util_a += (iN-1)*(iK-1)         * vl*tM*kl
+    util_a += (iM-1)*(iK-1)         * tN*ml*kl
+    util_a += (iN-1)                * vl*tM*tK
+    util_a += (iM-1)                * tN*ml*tK
+    util_a += (iK-1)                * tN*tM*kl
+    util_a +=                       tN*tM*tK
+    util_a /= (iN*iM*iK * ml*vl*kl)
+    return util_a
+
 def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op_ind, widen, width_mmu):
     """
     From 
@@ -24,12 +39,9 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
         'ops_cycle': macc operations per cycle,
         'mrf_capacity': matrix register file capacity
     """
-    mlf = mlB/(databits/8) #num MMU rows equals number of elements ml
-    ml = min(M, mlf)
-    vlf = vlB/(databits/8)
-    vl = min(N, vlf)
+    ml = mlB/(databits/8) #num MMU rows equals number of elements ml
+    vl = vlB/(databits/8)
     c_tile = widen * ml*vlB/kl**2
-    # kl = min(K, kl)
     
     # CACHE
     # TODO: kc
@@ -50,50 +62,40 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     t_crit = t_op[t_op_ind]/width_mmu**2
     t_uk = 2*t_mem + t_crit
     t_eff_opacc = max(t_uk, num_mregs*t_crit)
-
-    rN = N%vlf
-    rM = M%mlf
-    rK = K%kl
-    iM = math.floor(M/mc)
-    iN = math.floor(N/vl)
-    iK = math.floor(K/kc)
-    util_a = (iN*iM*iK * vl*ml*kl 
-              +  iN*iM * vl*ml*rK 
-              +  iN*iK * vl*rM*kl 
-              +  iK*iM * rN*ml*kl 
-              )/((iN+1)*(iM+1)*(iK+1) * ml*vl*kl)
-    print("vl: ", vl, "ml: ", ml, "kl: ", kl)
-    print("N: ", N, "M: ", M, "K: ", K)
-    print("rN: ", rN, "rM: ", rM, "rK: ", rK)
-    print("iM: ", iM, "iN: ", iN, "iK: ", iK)
-    print(util_a)
+    
+    # time utilization
     util_t = min(1, num_mregs*kc/t_uk)
+    # area utilization
+    util_a = area_utilization(M, N, K, ml, vl, kl)
+    # total utilization
     util = util_t*util_a
+    #equivalent 8-Byte operations per cycle
     ops_cycle = util*ml*vl*(databits/8)/kl
 
-    # number of parallel memory requests to hide latency
+    # number of parallel memory requests required to hide latency
     p_l2_op = t_uk/t_crit
     max_mregs = math.ceil(p_l2_op)
-
-    a_mem = num_mregs*mc*kc*databits/8
-    b_mem = kc*vlB
-    c_mem = num_mregs * c_tile
-    t_blas = t_eff_opacc*iM*iN
-    nmk_mem_bw = (c_mem + K*(a_mem + b_mem))/t_eff_opacc
-    knmk_mem_bw = iK*(b_mem + iM*(a_mem + c_mem))/t_blas
-    mrf_bw = (c_tile + kc*(mlB + vlB))/t_crit
     
-    # M REGFILE
+    # Matrix REGFILE
+    mrf_bw = (c_tile + kc*(mlB + vlB))/t_crit
     ms_a = mlB*kl
     ms_b = vlB*kl
-    md_c = widen * mlf*vlB/kl**2
+    md_c = widen * ml*vlB/kl**2
     max_mrf_capacity = max_mregs*(ms_a+ms_b+md_c)
     mrf_capacity = num_mregs*(ms_a+ms_b+md_c)
 
+    # Memory Bandwidth
+    a_mem = num_mregs*mc*kc*databits/8
+    b_mem = kc*vlB
+    c_mem = num_mregs * c_tile
+    iM, iN, iK = math.ceil(M/ml), math.ceil(N/vl), math.ceil(K/kl)
+    nmk_mem_bw = (c_mem + iK*(a_mem + b_mem))/t_eff_opacc
+    knmk_mem_bw = iK*(b_mem + iM*(a_mem + c_mem))/t_eff_opacc
+    
     #macc cell area estimate in cmos gates
     adder_cell = 20 #cmos gates
     macc_cell = adder_cell*databits**2
-    macc_gates = vlf*mlf*macc_cell/kl
+    macc_gates = vl*ml*macc_cell/kl
     reg_cell = 20 #cmos gates
     mrf_gates = mrf_capacity*8*reg_cell
     opu_gates = mrf_gates + macc_gates
@@ -103,8 +105,7 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     t_vec_crit = 1 + kc*ml/width_mmu
     t_uk_vec = 2*t_mem + t_vec_crit
     t_eff_opacc_vec = max(t_uk_vec, ml*t_vec_crit)
-    t_blas_vec = t_eff_opacc_vec*iM*iN
-    speedup_vec = t_blas_vec/t_blas
+    speedup_vec = t_eff_opacc_vec/t_eff_opacc
 
     perf_specs = {
         't_uk': t_uk,
