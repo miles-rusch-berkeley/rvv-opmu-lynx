@@ -87,15 +87,15 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     mrf_capacity = num_mregs*(ms_a + ms_b + md_c)
 
     # Memory Bandwidth
-    a_mem = p_mrf*mc*kc*databits/8
-    b_mem = kc*vlB
-    c_mem = p_mrf * c_tile
-    iM, iN, iK = math.ceil(M/ml), math.ceil(N/vl), math.ceil(K/kl)
-    nmk_mem_bw = (c_mem + iK*(a_mem + b_mem))/t_eff_opacc
-    iKc = math.ceil(K/kc)
+    a_mem = kc * mc
+    b_mem = kc * vlB
+    c_mem = mc * vlB*widen/kl**2
+    iM, iK = math.ceil(mc/ml), math.ceil(K/kl)
+    nmk_mem_bw = (c_mem + iK*(a_mem + iM*b_mem))/(t_eff_opacc*iM*iK)
+    
     b_blas = kc*N*databits/8
     a_blas = kc*mc*databits/8
-    knmk_mem_bw = iKc*(b_blas + iM*(a_mem + c_mem))/(t_eff_opacc*iK*iM*iN)
+    knmk_mem_bw = (b_blas + iM*(a_blas + c_mem))/(t_eff_opacc*iM)
     
     #macc cell area estimate in cmos gates
     adder_cell = 20 #cmos gates
