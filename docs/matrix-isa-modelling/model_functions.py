@@ -61,36 +61,41 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     ]
     t_crit = t_op[t_op_ind]/width_mmu**2
     t_uk = 2*t_mem + t_crit
-    t_eff_opacc = max(t_uk, num_mregs*t_crit)
+    # number of parallel memory requests required to hide latency
+    p_l2 = t_uk/t_crit
+    max_mregs = math.ceil(p_l2)
+    # effective ukernel latency given memory latency
+    p_mrf = num_mregs/(databits/8)
+    t_eff_opacc = max(t_uk/p_mrf, t_crit)
     
     # time utilization
-    util_t = min(1, num_mregs*kc/t_uk)
+    util_t = t_eff_opacc/t_crit
     # area utilization
     util_a = area_utilization(M, N, K, ml, vl, kl)
     # total utilization
     util = util_t*util_a
     #equivalent 8-Byte operations per cycle
-    ops_cycle = util*ml*vl*(databits/8)/kl
+    ops_cycle = util*ml*vlB/kl
 
-    # number of parallel memory requests required to hide latency
-    p_l2_op = t_uk/t_crit
-    max_mregs = math.ceil(p_l2_op)
     
     # Matrix REGFILE
-    mrf_bw = (c_tile + kc*(mlB + vlB))/t_crit
+    mrf_bw = (c_tile + kc*(mlB + vlB))/t_eff_opacc
     ms_a = mlB*kl
     ms_b = vlB*kl
-    md_c = widen * ml*vlB/kl**2
-    max_mrf_capacity = max_mregs*(ms_a+ms_b+md_c)
-    mrf_capacity = num_mregs*(ms_a+ms_b+md_c)
+    md_c = widen * vlB*mlB/kl**2
+    max_mrf_capacity = max_mregs*(ms_a + ms_b + c_tile)
+    mrf_capacity = num_mregs*(ms_a + ms_b + md_c)
 
     # Memory Bandwidth
-    a_mem = num_mregs*mc*kc*databits/8
+    a_mem = p_mrf*mc*kc*databits/8
     b_mem = kc*vlB
-    c_mem = num_mregs * c_tile
+    c_mem = p_mrf * c_tile
     iM, iN, iK = math.ceil(M/ml), math.ceil(N/vl), math.ceil(K/kl)
     nmk_mem_bw = (c_mem + iK*(a_mem + b_mem))/t_eff_opacc
-    knmk_mem_bw = iK*(b_mem + iM*(a_mem + c_mem))/t_eff_opacc
+    iKc = math.ceil(K/kc)
+    b_blas = kc*N*databits/8
+    a_blas = kc*mc*databits/8
+    knmk_mem_bw = iKc*(b_blas + iM*(a_mem + c_mem))/(t_eff_opacc*iK*iM*iN)
     
     #macc cell area estimate in cmos gates
     adder_cell = 20 #cmos gates

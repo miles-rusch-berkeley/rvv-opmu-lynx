@@ -35,7 +35,26 @@ Linear algebra libraries decompose large GEMMs into micro-kernels, such as the o
 Decomposition of GEMM into Outer Product Micro-Kernels [1]. 
 where the register and cache tile dimensions $n_r$, $m_r$, $k_c$ correspond to our model parameters like so: $n_r=v_l$, $m_r = m_l$
 
-The micro kernel at the bottom of the above figure can be written as follows:
+The micro kernel at the bottom of the above figure can be written as follows:  
+```
+for (int ko = 0; ko < K; k += kc) {
+    for (int mo = 0; mo < M; mo += mc) {
+        mat a = mld(A[m:ml,ko:kl]);
+        for (int n = 0; n < N; n += nr) {
+            for (int m = mo; m < mo+mc; m += mr) {
+                mat c = mld(C[m:ml, n:vl]);
+                for (int k = ko; k < ko+kl;  k += kl) {
+                    mat b = mld(B[k:kl,n:vl]);
+                    c = opacc(c, a ,b)
+            }   }
+            mst(c, C[m:, n:]);
+}   }   }
+```
+where `mld` and `mst` move matrix tiles into and out of the matrix registers within the outer product unit (note `mld` and `mst` need the unit-stride dimension of the matrix in memory to compute the stride between vector rows). A scalable dimension `ml` has been added to allow the number of vector rows held in the OPU to vary across machines.
+
+The micro-kernel is computed by calling the `opacc` instruction $k_c$ times, as shown in the above Fig. The $k_c$ iterations of micro-kernel can be reduced by introducing the parameter $k_l$, which is the number of accumulates per outer product instruction. Now A and B are tiles with inner dimension $k_l$, stored in local matrix or vector registers.
+
+If the matrices are sufficiently small we can move K to the innermost loop without overflowing our L2 and L3 cache, essentially reducing our BLAS schedule to the 2nd loop around the micro-kernel:
 ```
 for (int m = 0; m < M; m += ml) {
     ml = msetml(m);
@@ -51,24 +70,8 @@ for (int m = 0; m < M; m += ml) {
         mst(c, C[m:ml, n:vl]);
 }   }
 ```
-where `mld` and `mst` move matrix tiles into and out of the matrix registers within the outer product unit (note `mld` and `mst` need the unit-stride dimension of the matrix in memory to compute the stride between vector rows). A scalable dimension `ml` has been added to allow the number of vector rows held in the OPU to vary across machines.
+For a 512KB L2 cache this would occur with square matrix dimensions of around 256 Bytes. For a 4MB L3 cache this would occur for dimensions around 1KB.
 
-The micro-kernel is computed by calling the `opacc` instruction $k_c$ times, as shown in the above Fig. The $k_c$ iterations of micro-kernel can be reduced by introducing the parameter $k_l$, which is the number of accumulates per outer product instruction. Now A and B are tiles with inner dimension $k_l$, stored in local matrix or vector registers.
-
-If the matrices are sufficiently small we can move K to the innermost loop without overflowing our L2 and L3 cache, essentially reducing our BLAS schedule to the 2nd loop around the micro-kernel:
-```
-for (int ko = 0; ko < K; k += kc) {
-    for (int m = 0; m < M; mo += mc) {
-        mat a = mld(A[m:ml,ko:kl]);
-        for (int n = 0; n < N; n += nc) {
-            mat c = mld(C[m:ml, n:vl]);
-            for (int k = ko; k < ko+kl;  k += kl) {
-                mat b = mld(B[k:kl,n:vl]);
-                c = opacc(c, a ,b)
-        }   }
-        mst(c, C[m:, n:]);
-}   }
-```
 In the inner loop of this output stationary dataflow, $N+M$ vector elements are loaded and $NM$ MACC operations are performed. For a machine with vector length $vl=N=M$, the fraction of compute operations to memory accesses, or operational intensity, increases with the vector length of the machine, $OI = \frac{NM}{N+M}=vl$.
 
 Scaling $vl$ is limited in part by available register and cache capacity required to stage the next set of outer products such that the functional unit is fully utilized.
