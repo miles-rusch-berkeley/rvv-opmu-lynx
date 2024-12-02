@@ -69,14 +69,13 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     t_eff_opacc = max(t_uk/p_mrf, t_crit)
     
     # time utilization
-    util_t = t_eff_opacc/t_crit
+    util_t = t_crit/t_eff_opacc
     # area utilization
     util_a = area_utilization(M, N, K, ml, vl, kl)
     # total utilization
     util = util_t*util_a
     #equivalent 8-Byte operations per cycle
     ops_cycle = util*ml*vlB/kl
-
     
     # Matrix REGFILE
     mrf_bw = (c_tile + kc*(mlB + vlB))/t_eff_opacc
@@ -87,15 +86,16 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     mrf_capacity = num_mregs*(ms_a + ms_b + md_c)
 
     # Memory Bandwidth
-    a_mem = kc * mc
+    a_mem = kc * mc*databits/8
     b_mem = kc * vlB
     c_mem = mc * vlB*widen/kl**2
-    iM, iK = math.ceil(mc/ml), math.ceil(K/kl)
-    nmk_mem_bw = (c_mem + iK*(a_mem + iM*b_mem))/(t_eff_opacc*iM*iK)
+    iMcl, iK = math.ceil(mc/ml), math.ceil(K/kl)
+    nmk_mem_bw = (c_mem + iK*(a_mem + iMcl*b_mem))/(t_eff_opacc*iK*iMcl)
     
     b_blas = kc*N*databits/8
     a_blas = kc*mc*databits/8
-    knmk_mem_bw = (b_blas + iM*(a_blas + c_mem))/(t_eff_opacc*iM)
+    iMc, iN = math.ceil(M/mc), math.ceil(N/vl)
+    knmk_mem_bw = (b_blas + iMc*(a_blas + iN*c_mem))/(t_eff_opacc*iMc*iMcl*iN)
     
     #macc cell area estimate in cmos gates
     adder_cell = 20 #cmos gates
@@ -188,7 +188,7 @@ def init_pm(
     vlB = np.array([256])/8,    # [Bytes]
     mlB = np.array([256])/8,    # [Bytes]
     num_mregs = np.array([2]),
-    t_op = np.array([0]),     # [cycles]
+    t_op = np.array([2]),     # [cycles]
     widen = np.array([4]),      
     width_mmu = np.array([1]),     # [1 or 1/2]
     ):

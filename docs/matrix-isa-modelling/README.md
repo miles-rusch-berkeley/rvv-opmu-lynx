@@ -43,6 +43,7 @@ for (int ko = 0; ko < K; k += kc) {
         // L2$ prefetch A[mo:mc,ko:kc]
         for (int n = 0; n < N; n += nr) {
             nr = vsetvl(n);
+            // L2$ prefetch C[mo:mc,n:nr]
             for (int m = mo; m < mo+mc; m += mr) {
                 mr = msetml(m);
                 mat a = mld(A[m:mr,ko:kl]);
