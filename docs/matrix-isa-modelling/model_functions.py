@@ -22,16 +22,17 @@ def area_utilization(M, N, K, ml, vl, kl):
 
 def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_op_ind, widen, width_mmu):
     """
-    From 
+    From software parameters
         databits: number of bits per vector element 
-        t_mem: memory latency,  
-        'l2_size': cache size in KB,
-        kl: number of outer product operations accumulated per instruction,
-        vlB, mlB: bytes per vector, vectors per matrix register
-        num_regs: number of 2D matrix registers
-        t_op_ind: select functional unit latency
         widen: widening factor between input and output elements
+        t_mem: memory latency,  
+    and microarchitecture parameters
+        num_regs: number of 2D matrix registers
+        vlB, mlB: bytes per vector, vectors per matrix register
+        kl: number of outer product operations accumulated per instruction,
+        t_op_ind: select functional unit latency
         width_mmu: half width reduces bw and increases latency both by a factor of four
+        'l2_size': cache size in KB,
     Calculate 
         'mem_bw': average memory bandwidth for outer product BLAS schedule,
         'mrf_bw': matrix register file bandwidth
@@ -90,7 +91,7 @@ def dataflow_model(databits, t_mem, M,N,K, l2_cache, kl, vlB, mlB, num_mregs, t_
     b_mem = kc * vlB
     c_mem = mc * vlB*widen/kl**2
     iMcl, iK = math.ceil(mc/ml), math.ceil(K/kl)
-    nmk_mem_bw = (c_mem + iK*(a_mem + iMcl*b_mem))/(t_eff_opacc*iK*iMcl)
+    nmk_mem_bw = (a_mem + iMcl*b_mem)/(t_eff_opacc*iMcl)
     
     b_blas = kc*N*databits/8
     a_blas = kc*mc*databits/8
